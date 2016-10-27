@@ -1,5 +1,5 @@
 <?php
-namespace ResourceResolver;
+namespace ResourceResolver\Exception;
 
 class UnresolvableException extends \Exception
 {
