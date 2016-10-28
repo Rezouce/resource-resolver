@@ -25,4 +25,9 @@ class UnresolvableResolverTest extends TestCase
 
         $this->subject->resolve('id');
     }
+
+    public function testIsResolvable()
+    {
+        $this->assertFalse($this->subject->isResolvable('id'));
+    }
 }

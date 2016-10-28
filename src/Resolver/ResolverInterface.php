@@ -6,8 +6,11 @@ use ResourceResolver\Exception\UnresolvableException;
 interface ResolverInterface
 {
 
+    public function isResolvable(string $id) : bool;
+
     /**
      * @param string $id
+     * 
      * @return mixed
      * @throws UnresolvableException
      */

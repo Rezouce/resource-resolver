@@ -10,4 +10,9 @@ class UnresolvableResolver implements ResolverInterface
     {
         throw new UnresolvableException(sprintf('The resource %s could not be resolved.', $id));
     }
+
+    public function isResolvable(string $id) : bool
+    {
+        return false;
+    }
 }

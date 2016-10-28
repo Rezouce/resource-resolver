@@ -1,6 +1,8 @@
 <?php
 namespace ResourceResolver\Resolver;
 
+use ResourceResolver\Exception\UnresolvableException;
+
 class ChainedResolver implements ResolverInterface
 {
 
@@ -13,13 +15,24 @@ class ChainedResolver implements ResolverInterface
         $this->nextResolver = $nextResolver;
         $this->resolver = $resolver;
     }
-    
+
+    public function isResolvable(string $id) : bool
+    {
+        return $this->resolver->isResolvable($id) || $this->nextResolver->isResolvable($id);
+    }
+
     public function resolve(string $id)
     {
-        $resolvedData = $this->resolver->resolve($id);
+        if ($this->resolver->isResolvable($id)) {
+            return $this->resolver->resolve($id);
+        }
 
-        return null === $resolvedData
-            ? $this->nextResolver->resolve($id)
-            : $resolvedData;
+        if ($this->nextResolver->isResolvable($id)) {
+            return $this->nextResolver->resolve($id);
+        }
+
+        throw new UnresolvableException(
+            sprintf('The resource %s could not be resolved by any resolver in the chain.', $id)
+        );
     }
 }

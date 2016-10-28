@@ -3,32 +3,34 @@ namespace ResourceResolver\Resolver;
 
 use ReflectionClass;
 use ReflectionParameter;
+use ResourceResolver\Exception\UnresolvableException;
 
 class ReflectionResolver implements ResolverInterface
 {
 
-    private $firstResolver;
+    private $initialResolver;
 
-    private $nextResolver;
-
-    public function __construct(ResolverInterface $firstResolver, ResolverInterface $nextResolver)
+    public function __construct(ResolverInterface $initialResolver = null)
     {
-        $this->firstResolver = $firstResolver;
+        $this->initialResolver = $initialResolver ?: $this;
+    }
 
-        $this->nextResolver = $nextResolver;
+    public function isResolvable(string $id) : bool
+    {
+        return class_exists($id);
     }
 
     public function resolve(string $id)
     {
-        if (class_exists($id)) {
-            $class = new ReflectionClass($id);
-
-            return $class->newInstanceArgs(
-                $this->resolveParameters($this->getParametersType($class))
-            );
+        if (!$this->isResolvable($id)) {
+            throw new UnresolvableException(sprintf('The resource %s is not a class', $id));
         }
 
-        return $this->nextResolver->resolve($id);
+        $class = new ReflectionClass($id);
+
+        return $class->newInstanceArgs(
+            $this->resolveParameters($this->getParametersType($class))
+        );
     }
 
     private function getParametersType(ReflectionClass $class)
@@ -45,7 +47,7 @@ class ReflectionResolver implements ResolverInterface
         $resolvedParameters = [];
         
         foreach ($parameters as $parameter) {
-            $resolvedParameters[] = $this->firstResolver->resolve($parameter);
+            $resolvedParameters[] = $this->initialResolver->resolve($parameter);
         }
         
         return $resolvedParameters;

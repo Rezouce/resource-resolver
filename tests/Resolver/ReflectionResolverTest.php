@@ -2,6 +2,7 @@
 namespace ResourceResolverTest;
 
 use PHPUnit\Framework\TestCase;
+use ResourceResolver\Exception\UnresolvableException;
 use ResourceResolver\Resolver\ReflectionResolver;
 use ResourceResolver\Resolver\ResolverInterface;
 use ResourceResolverTest\Utility\ClassWithAnObjectDependency;
@@ -16,22 +17,16 @@ class ReflectionResolverTest extends TestCase
     private $subject;
 
     /** @var \PHPUnit_Framework_MockObject_MockObject */
-    private $firstResolver;
-
-    /** @var \PHPUnit_Framework_MockObject_MockObject */
-    private $nextResolver;
+    private $initialResolver;
 
     public function setUp()
     {
         parent::setUp();
 
         /** @var ResolverInterface $firstResolver */
-        $this->firstResolver = $firstResolver = $this->createMock(ResolverInterface::class);
+        $this->initialResolver = $firstResolver = $this->createMock(ResolverInterface::class);
         
-        /** @var ResolverInterface $nextResolver */
-        $this->nextResolver = $nextResolver = $this->createMock(ResolverInterface::class);
-
-        $this->subject = new ReflectionResolver($firstResolver, $nextResolver);
+        $this->subject = new ReflectionResolver($firstResolver);
     }
 
     public function testResolveAClassWithoutDependencies()
@@ -42,9 +37,9 @@ class ReflectionResolverTest extends TestCase
         );
     }
 
-    public function testPassToTheNextResolverIfFailToResolve()
+    public function testThrowsAnExceptionIfFailedToResolve()
     {
-        $this->nextResolver->expects($this->once())->method('resolve')->with('id');
+        $this->expectException(UnresolvableException::class);
 
         $this->subject->resolve('id');
     }
@@ -53,7 +48,7 @@ class ReflectionResolverTest extends TestCase
     {
         $parameterName = sprintf('%s::dependency', ClassWithAScalarDependency::class);
         
-        $this->firstResolver->expects($this->once())->method('resolve')->with($parameterName)->willReturn('test');
+        $this->initialResolver->expects($this->once())->method('resolve')->with($parameterName)->willReturn('test');
 
         /** @var ClassWithAScalarDependency $resolvedResource */
         $resolvedResource = $this->subject->resolve(ClassWithAScalarDependency::class);
@@ -66,7 +61,7 @@ class ReflectionResolverTest extends TestCase
     {
         $dependency = new ClassWithoutAnyDependency;
 
-        $this->firstResolver
+        $this->initialResolver
             ->expects($this->once())
             ->method('resolve')
             ->with(ClassWithoutAnyDependency::class)
@@ -85,7 +80,7 @@ class ReflectionResolverTest extends TestCase
         $dependency2 = new ClassWithAScalarDependency('test');
         $dependency3 = new ClassWithAnObjectDependency($dependency1);
 
-        $this->firstResolver
+        $this->initialResolver
             ->expects($this->exactly(3))
             ->method('resolve')
             ->willReturn($dependency1, $dependency2, $dependency3);
@@ -97,5 +92,11 @@ class ReflectionResolverTest extends TestCase
         $this->assertSame($dependency1, $resolvedResource->dependency1);
         $this->assertSame($dependency2, $resolvedResource->dependency2);
         $this->assertSame($dependency3, $resolvedResource->dependency3);
+    }
+
+    public function testIsResolvable()
+    {
+        $this->assertTrue($this->subject->isResolvable(ClassWithoutAnyDependency::class));
+        $this->assertFalse($this->subject->isResolvable('not a class name'));
     }
 }

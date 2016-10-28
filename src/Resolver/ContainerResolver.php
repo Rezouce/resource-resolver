@@ -2,27 +2,29 @@
 namespace ResourceResolver\Resolver;
 
 use ResourceResolver\ContainerInterface;
+use ResourceResolver\Exception\UnresolvableException;
 
 class ContainerResolver implements ResolverInterface
 {
 
     private $container;
 
-    private $nextResolver;
-
-    public function __construct(ContainerInterface $container, ResolverInterface $nextResolver)
+    public function __construct(ContainerInterface $container)
     {
         $this->container = $container;
+    }
 
-        $this->nextResolver = $nextResolver;
+    public function isResolvable(string $id) : bool
+    {
+        return $this->container->has($id);
     }
 
     public function resolve(string $id)
     {
-        if ($this->container->has($id)) {
-            return $this->container->get($id);
+        if (!$this->isResolvable($id)) {
+            throw new UnresolvableException(sprintf('The resource %s is not in the container', $id));
         }
 
-        return $this->nextResolver->resolve($id);
+        return $this->container->get($id);
     }
 }
