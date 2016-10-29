@@ -9,62 +9,81 @@ use ResourceResolver\Resolver\ChainedResolver;
 class ChainedResolverTest extends TestCase
 {
 
-    /** @var ChainedResolver */
-    private $subject;
+    const WILL_RESOLVED_ID = true;
+    const WONT_RESOLVED_ID = false;
 
-    /** @var \PHPUnit_Framework_MockObject_MockObject */
-    private $resolver;
-
-    /** @var \PHPUnit_Framework_MockObject_MockObject */
-    private $nextResolver;
-
-    public function setUp()
+    public function testResolveWithTheProvidedResolvers()
     {
-        parent::setUp();
+        for ($i = 1; $i <= 10; ++$i) {
+            $resolvers = $this->createResolvers($i, static::WILL_RESOLVED_ID);
 
-        /** @var ResolverInterface $resolver */
-        $this->resolver = $resolver = $this->createMock(ResolverInterface::class);
-        /** @var ResolverInterface $nextResolver */
-        $this->nextResolver = $nextResolver = $this->createMock(ResolverInterface::class);
+            $subject = $this->createChainedResolver($resolvers);
 
-        $this->subject = new ChainedResolver($resolver, $nextResolver);
-    }
-
-    public function testResolveWithTheProvidedResolver()
-    {
-        $this->resolver->method('isResolvable')->with('id')->willReturn(true);
-        $this->resolver->method('resolve')->with('id')->willReturn('resolved');
-
-        $this->assertEquals('resolved', $this->subject->resolve('id'));
-    }
-
-    public function testResolveUsingTheNextResolverIfTheFirstOneFail()
-    {
-        $this->resolver->method('isResolvable')->with('id')->willReturn(false);
-        $this->nextResolver->method('isResolvable')->with('id')->willReturn(true);
-        $this->nextResolver->method('resolve')->with('id')->willReturn('resolved');
-
-        $this->assertEquals('resolved', $this->subject->resolve('id'));
+            $this->assertEquals('resolved', $subject->resolve('id'));
+        }
     }
 
     public function testThrowsAnExceptionIfFailedToResolve()
     {
-        $this->resolver->method('isResolvable')->with('id')->willReturn(false);
-        $this->nextResolver->method('isResolvable')->with('id')->willReturn(false);
-
         $this->expectException(UnresolvableException::class);
 
-        $this->subject->resolve('id');
+        $resolvers = $this->createResolvers(10, static::WONT_RESOLVED_ID);
+
+        $subject = $this->createChainedResolver($resolvers);
+
+        $subject->resolve('id');
     }
 
-    public function testIsResolvable()
+    public function testIsResolvableIfOneOfTheResolverCanResolveIt()
     {
-        $this->resolver->method('isResolvable')->with('id')->willReturn(true, true, false, false);
-        $this->nextResolver->method('isResolvable')->with('id')->willReturn(true, false, true, false);
+        for ($i = 1; $i <= 10; ++$i) {
+            $resolvers = $this->createResolvers($i, static::WILL_RESOLVED_ID);
 
-        $this->assertTrue($this->subject->isResolvable('id'));
-        $this->assertTrue($this->subject->isResolvable('id'));
-        $this->assertTrue($this->subject->isResolvable('id'));
-        $this->assertFalse($this->subject->isResolvable('id'));
+            $subject = $this->createChainedResolver($resolvers);
+
+            $this->assertTrue($subject->isResolvable('id'));
+        }
+    }
+
+    public function testIsNotResolvableIfNoneOfTheResolverCanResolveIt()
+    {
+        $resolvers = $this->createResolvers(10, static::WONT_RESOLVED_ID);
+
+        $subject = $this->createChainedResolver($resolvers);
+
+        $this->assertFalse($subject->isResolvable('id'));
+    }
+
+    private function createResolvers(int $numberResolvers, bool $willResolved)
+    {
+        $firstToResolve = $willResolved ? rand(1, $numberResolvers) : null;
+        $resolvers = [];
+
+        for ($i = 1; $i <= $numberResolvers; ++$i) {
+            $resolver = $this->createMock(ResolverInterface::class);
+
+            if ($i === $firstToResolve) {
+                $resolver->method('isResolvable')->with('id')->willReturn(true);
+                $resolver->method('resolve')->with('id')->willReturn('resolved');
+            } else {
+                $resolver->method('isResolvable')->with('id')->willReturn(false);
+            }
+
+            $resolvers[] = $resolver;
+        }
+
+        return $resolvers;
+    }
+
+    /**
+     * @param array $resolvers
+     * @return ChainedResolver
+     */
+    private function createChainedResolver(array $resolvers)
+    {
+        $reflection = new \ReflectionClass(ChainedResolver::class);
+
+        /** @var ChainedResolver $subject */
+        return $reflection->newInstanceArgs($resolvers);
     }
 }

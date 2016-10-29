@@ -3,32 +3,39 @@ namespace ResourceResolver\Resolver;
 
 use ResourceResolver\Exception\UnresolvableException;
 
+/**
+ * This resolver is useful if you want to execute multiple resolvers one after the other
+ * until one is able to resolve the id.
+ * You can provide as many resolvers as you want during its construction. They'll be
+ * used to resolve the id using the order in which they're given.
+ */
 class ChainedResolver implements ResolverInterface
 {
 
-    private $resolver;
+    private $resolvers;
 
-    private $nextResolver;
-
-    public function __construct(ResolverInterface $resolver, ResolverInterface $nextResolver)
+    public function __construct(ResolverInterface ...$resolvers)
     {
-        $this->nextResolver = $nextResolver;
-        $this->resolver = $resolver;
+        $this->resolvers = $resolvers;
     }
 
     public function isResolvable(string $id) : bool
     {
-        return $this->resolver->isResolvable($id) || $this->nextResolver->isResolvable($id);
+        foreach ($this->resolvers as $resolver) {
+            if ($resolver->isResolvable($id)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function resolve(string $id)
     {
-        if ($this->resolver->isResolvable($id)) {
-            return $this->resolver->resolve($id);
-        }
-
-        if ($this->nextResolver->isResolvable($id)) {
-            return $this->nextResolver->resolve($id);
+        foreach ($this->resolvers as $resolver) {
+            if ($resolver->isResolvable($id)) {
+                return $resolver->resolve($id);
+            }
         }
 
         throw new UnresolvableException(
