@@ -4,6 +4,10 @@ namespace ResourceResolver\Resolver;
 use Interop\Container\ContainerInterface;
 use ResourceResolver\Exception\UnresolvableException;
 
+/**
+ * You can use this resolver to resolve an id from a container implementing the
+ * ContainerInterface defined by the container-interop/container-interop repository.
+ */
 class ContainerResolver implements ResolverInterface
 {
 
