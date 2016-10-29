@@ -140,4 +140,15 @@ class ReflectionResolverTest extends TestCase
         $this->assertInstanceOf(ClassWithAScalarDependency::class, $resolvedResource);
         $this->assertEquals('test', $resolvedResource->dependency);
     }
+
+    public function testItUseItselfToRetrieveItsDependencyIfNoResolverIsProvidedDuringItsConstruction()
+    {
+        $this->subject = new ReflectionResolver;
+
+        /** @var ClassWithAnObjectDependency $resolvedResource */
+        $resolvedResource = $this->subject->resolve(ClassWithAnObjectDependency::class);
+
+        $this->assertInstanceOf(ClassWithAnObjectDependency::class, $resolvedResource);
+        $this->assertInstanceOf(ClassWithoutAnyDependency::class, $resolvedResource->dependency);
+    }
 }
