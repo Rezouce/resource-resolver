@@ -5,6 +5,9 @@ use PHPUnit\Framework\TestCase;
 use ResourceResolver\Exception\UnresolvableException;
 use ResourceResolver\Resolver\ReflectionResolver;
 use ResourceResolver\Resolver\ResolverInterface;
+use ResourceResolverTest\Utility\ClassAbstract;
+use ResourceResolverTest\Utility\ClassInterface;
+use ResourceResolverTest\Utility\ClassNotInstantiable;
 use ResourceResolverTest\Utility\ClassWithAnObjectDependency;
 use ResourceResolverTest\Utility\ClassWithAScalarDependency;
 use ResourceResolverTest\Utility\ClassWithMultipleDependencies;
@@ -98,5 +101,26 @@ class ReflectionResolverTest extends TestCase
     {
         $this->assertTrue($this->subject->isResolvable(ClassWithoutAnyDependency::class));
         $this->assertFalse($this->subject->isResolvable('not a class name'));
+    }
+    
+    public function testItCantResolveClassesNotInstantiable()
+    {
+        $this->expectException(UnresolvableException::class);
+
+        $this->subject->resolve(ClassNotInstantiable::class);
+    }
+
+    public function testItCantResolveAbstractClasses()
+    {
+        $this->expectException(UnresolvableException::class);
+
+        $this->subject->resolve(ClassAbstract::class);
+    }
+
+    public function testItCantResolveInterfaces()
+    {
+        $this->expectException(UnresolvableException::class);
+
+        $this->subject->resolve(ClassInterface::class);
     }
 }

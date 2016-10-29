@@ -17,7 +17,7 @@ class ReflectionResolver implements ResolverInterface
 
     public function isResolvable(string $id) : bool
     {
-        return class_exists($id);
+        return class_exists($id) && (new ReflectionClass($id))->isInstantiable();
     }
 
     public function resolve(string $id)
