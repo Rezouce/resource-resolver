@@ -54,6 +54,34 @@ class ChainedResolverTest extends TestCase
         $this->assertFalse($subject->isResolvable('id'));
     }
 
+    public function testItAllowsToAddResolversAfterwards()
+    {
+        $subject = $this->createChainedResolver();
+
+        $this->assertFalse($subject->isResolvable('id'));
+
+        $subject->add(current($this->createResolvers(1, static::WILL_RESOLVED_ID)));
+
+        $this->assertTrue($subject->isResolvable('id'));
+    }
+
+    public function testItAllowsToAddAResolverBeforeAnOtherRegisteredResolver()
+    {
+        $resolvers = $this->createResolvers(1, static::WILL_RESOLVED_ID);
+        $subject = $this->createChainedResolver($resolvers);
+
+        $this->assertEquals('resolved', $subject->resolve('id'));
+
+        /** @var ResolverInterface|\PHPUnit_Framework_MockObject_MockObject $resolver */
+        $resolver = $this->createMock(ResolverInterface::class);
+        $resolver->method('isResolvable')->with('id')->willReturn(true);
+        $resolver->method('resolve')->with('id')->willReturn('resolved before');
+
+        $subject->addBefore(current($resolvers), $resolver);
+
+        $this->assertEquals('resolved before', $subject->resolve('id'));
+    }
+
     private function createResolvers(int $numberResolvers, bool $willResolved)
     {
         $firstToResolve = $willResolved ? rand(1, $numberResolvers) : null;
@@ -79,7 +107,7 @@ class ChainedResolverTest extends TestCase
      * @param array $resolvers
      * @return ChainedResolver
      */
-    private function createChainedResolver(array $resolvers)
+    private function createChainedResolver(array $resolvers = [])
     {
         $reflection = new \ReflectionClass(ChainedResolver::class);
 
