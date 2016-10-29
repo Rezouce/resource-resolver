@@ -5,6 +5,16 @@ use ReflectionClass;
 use ReflectionParameter;
 use ResourceResolver\Exception\UnresolvableException;
 
+/**
+ * This resolver can resolve ids which match a class name by using the reflection classes.
+ * 
+ * For scalar parameters, which can't be resolved by reflection, it'll try to resolve them
+ * by calling a resolver which can be provided during the resolver construction.
+ * You can, for example, provide a ContainerResolver which will be able to resolve the
+ * parameter. The default format for matching these parameters is {parent}::{parameter},
+ * format that you may want to change by providing another one at the ReflectionResolver's
+ * second construct parameter.
+ */
 class ReflectionResolver implements ResolverInterface
 {
 
