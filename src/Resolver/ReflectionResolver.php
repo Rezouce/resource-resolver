@@ -10,9 +10,14 @@ class ReflectionResolver implements ResolverInterface
 
     private $initialResolver;
 
-    public function __construct(ResolverInterface $initialResolver = null)
-    {
+    private $scalarParameterIdFormat;
+
+    public function __construct(
+        ResolverInterface $initialResolver = null,
+        string $scalarParameterIdFormat = '{parent}::{parameter}'
+    ) {
         $this->initialResolver = $initialResolver ?: $this;
+        $this->scalarParameterIdFormat = $scalarParameterIdFormat;
     }
 
     public function isResolvable(string $id) : bool
@@ -38,7 +43,7 @@ class ReflectionResolver implements ResolverInterface
         return array_map(function (ReflectionParameter $parameter) use ($class) {
             return $parameter->getClass()
                 ? $parameter->getClass()->getName()
-                : sprintf('%s::%s', $class->getName(), $parameter->getName());
+                : $this->createScalarParameterId($class->getName(), $parameter->getName());
         }, $class->getConstructor() ? $class->getConstructor()->getParameters(): []);
     }
 
@@ -51,5 +56,10 @@ class ReflectionResolver implements ResolverInterface
         }
         
         return $resolvedParameters;
+    }
+
+    private function createScalarParameterId($parentName, $parameterName)
+    {
+        return str_replace(['{parent}', '{parameter}'], [$parentName, $parameterName], $this->scalarParameterIdFormat);
     }
 }

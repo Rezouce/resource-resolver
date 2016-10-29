@@ -26,10 +26,10 @@ class ReflectionResolverTest extends TestCase
     {
         parent::setUp();
 
-        /** @var ResolverInterface $firstResolver */
-        $this->initialResolver = $firstResolver = $this->createMock(ResolverInterface::class);
+        /** @var ResolverInterface $initialResolver */
+        $this->initialResolver = $initialResolver = $this->createMock(ResolverInterface::class);
         
-        $this->subject = new ReflectionResolver($firstResolver);
+        $this->subject = new ReflectionResolver($initialResolver);
     }
 
     public function testResolveAClassWithoutDependencies()
@@ -122,5 +122,22 @@ class ReflectionResolverTest extends TestCase
         $this->expectException(UnresolvableException::class);
 
         $this->subject->resolve(ClassInterface::class);
+    }
+    
+    public function testItAllowsToChangeTheIdUsedForScalarParametersResolution()
+    {
+        /** @var ResolverInterface $initialResolver */
+        $initialResolver = $this->initialResolver;
+        $this->subject = new ReflectionResolver($initialResolver, '{parent}[{parameter}]');
+
+        $parameterName = sprintf('%s[dependency]', ClassWithAScalarDependency::class);
+
+        $this->initialResolver->expects($this->once())->method('resolve')->with($parameterName)->willReturn('test');
+
+        /** @var ClassWithAScalarDependency $resolvedResource */
+        $resolvedResource = $this->subject->resolve(ClassWithAScalarDependency::class);
+
+        $this->assertInstanceOf(ClassWithAScalarDependency::class, $resolvedResource);
+        $this->assertEquals('test', $resolvedResource->dependency);
     }
 }
