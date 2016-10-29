@@ -1,24 +1,24 @@
 <?php
 namespace ResourceResolverTest\Utility;
 
-use ResourceResolver\ContainerInterface;
+use Interop\Container\ContainerInterface;
 
 class Container implements ContainerInterface
 {
 
     private $data = [];
 
-    public function get(string $id)
+    public function get($id)
     {
         return $this->data[$id];
     }
 
-    public function add(string $id, $resource)
+    public function add($id, $resource)
     {
         $this->data[$id] = $resource;
     }
 
-    public function has(string $id): bool
+    public function has($id)
     {
         return isset($this->data[$id]);
     }

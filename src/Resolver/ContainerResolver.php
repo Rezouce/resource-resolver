@@ -1,7 +1,7 @@
 <?php
 namespace ResourceResolver\Resolver;
 
-use ResourceResolver\ContainerInterface;
+use Interop\Container\ContainerInterface;
 use ResourceResolver\Exception\UnresolvableException;
 
 class ContainerResolver implements ResolverInterface
