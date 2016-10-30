@@ -43,29 +43,45 @@ class ReflectionResolver implements ResolverInterface
 
         $class = new ReflectionClass($id);
 
-        return $class->newInstanceArgs(
-            $this->resolveParameters($this->getParametersType($class))
-        );
+        return $class->newInstanceArgs($this->resolveParameters($class));
     }
 
-    private function getParametersType(ReflectionClass $class)
-    {
-        return array_map(function (ReflectionParameter $parameter) use ($class) {
-            return $parameter->getClass()
-                ? $parameter->getClass()->getName()
-                : $this->createScalarParameterId($class->getName(), $parameter->getName());
-        }, $class->getConstructor() ? $class->getConstructor()->getParameters(): []);
-    }
-
-    private function resolveParameters(array $parameters)
+    private function resolveParameters(ReflectionClass $class)
     {
         $resolvedParameters = [];
         
-        foreach ($parameters as $parameter) {
-            $resolvedParameters[] = $this->initialResolver->resolve($parameter);
+        foreach ($this->getListReflectionParameters($class) as $parameter) {
+            $resolvedParameters[] = $this->resolveParameter($parameter, $class->getName());
         }
         
         return $resolvedParameters;
+    }
+
+    private function getListReflectionParameters(ReflectionClass $class)
+    {
+        return $class->getConstructor() ? $class->getConstructor()->getParameters() : [];
+    }
+
+    private function resolveParameter(ReflectionParameter $parameter, $className)
+    {
+        $id = $this->getParameterId($parameter, $className);
+
+        if ($this->initialResolver->isResolvable($id)) {
+            return $this->initialResolver->resolve($id);
+        }
+
+        if ($parameter->isOptional()) {
+            return $parameter->getDefaultValue();
+        }
+
+        throw new UnresolvableException(sprintf('Unable to resolve parameter with id %s', $id));
+    }
+
+    private function getParameterId(ReflectionParameter $parameter, $className)
+    {
+        return $parameter->getClass()
+            ? $parameter->getClass()->getName()
+            : $this->createScalarParameterId($className, $parameter->getName());
     }
 
     private function createScalarParameterId($parentName, $parameterName)
