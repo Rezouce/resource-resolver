@@ -3,7 +3,7 @@ namespace ResourceResolver\Resolver;
 
 use ResourceResolver\Exception\UnresolvableException;
 
-class OnlyOnceResolver implements ResolverInterface
+class OneTimeResolver implements ResolverInterface
 {
 
     private $delegatedResolver;

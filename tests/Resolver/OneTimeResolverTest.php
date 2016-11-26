@@ -3,16 +3,16 @@ namespace ResourceResolverTest;
 
 use PHPUnit\Framework\TestCase;
 use ResourceResolver\Exception\UnresolvableException;
-use ResourceResolver\Resolver\OnlyOnceResolver;
+use ResourceResolver\Resolver\OneTimeResolver;
 use ResourceResolver\Resolver\ResolverInterface;
 
-class OnlyOnceResolverTest extends TestCase
+class OneTimeResolverTest extends TestCase
 {
 
     /** @var ResolverInterface|\PHPUnit_Framework_MockObject_MockObject */
     private $delegatedResolver;
 
-    /** @var OnlyOnceResolver */
+    /** @var OneTimeResolver */
     private $subject;
 
     public function setUp()
@@ -21,7 +21,7 @@ class OnlyOnceResolverTest extends TestCase
 
         $this->delegatedResolver = $this->createMock(ResolverInterface::class);
 
-        $this->subject = new OnlyOnceResolver($this->delegatedResolver);
+        $this->subject = new OneTimeResolver($this->delegatedResolver);
     }
 
     public function testDelegateTheResourceResolvingTheFirstTime()
