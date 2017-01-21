@@ -2,6 +2,7 @@
 namespace ResourceResolverTest;
 
 use PHPUnit\Framework\TestCase;
+use ResourceResolver\Exception\InvalidArgumentException;
 use ResourceResolver\Exception\UnresolvableException;
 use ResourceResolver\Resolver\ResolverInterface;
 use ResourceResolver\Resolver\ChainedResolver;
@@ -80,6 +81,20 @@ class ChainedResolverTest extends TestCase
         $subject->addBefore(current($resolvers), $resolver);
 
         $this->assertEquals('resolved before', $subject->resolve('id'));
+    }
+
+    public function testItThrowsAnExceptionWhenTryingToAddAResolverBeforeOneWhichDoesNotExist()
+    {
+        /** @var ResolverInterface|\PHPUnit_Framework_MockObject_MockObject $resolver1 */
+        $resolver1 = $this->createMock(ResolverInterface::class);
+        /** @var ResolverInterface|\PHPUnit_Framework_MockObject_MockObject $resolver2 */
+        $resolver2 = $this->createMock(ResolverInterface::class);
+
+        $subject = $this->createChainedResolver();
+
+        $this->expectException(InvalidArgumentException::class);
+
+        $subject->addBefore($resolver1, $resolver2);
     }
 
     private function createResolvers(int $numberResolvers, bool $willResolved)
