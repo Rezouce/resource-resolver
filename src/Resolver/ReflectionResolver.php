@@ -51,7 +51,7 @@ class ReflectionResolver implements ResolverInterface
         $resolvedParameters = [];
         
         foreach ($this->getListReflectionParameters($class) as $parameter) {
-            $resolvedParameters[] = $this->resolveParameter($parameter, $class->getName());
+            $resolvedParameters[] = $this->resolveParameter($parameter, $class->name);
         }
         
         return $resolvedParameters;
@@ -80,8 +80,8 @@ class ReflectionResolver implements ResolverInterface
     private function getParameterId(ReflectionParameter $parameter, $className)
     {
         return $parameter->getClass()
-            ? $parameter->getClass()->getName()
-            : $this->createScalarParameterId($className, $parameter->getName());
+            ? $parameter->getClass()->name
+            : $this->createScalarParameterId($className, $parameter->name);
     }
 
     private function createScalarParameterId($parentName, $parameterName)
