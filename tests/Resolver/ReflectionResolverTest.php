@@ -184,4 +184,15 @@ class ReflectionResolverTest extends TestCase
         $this->assertInstanceOf(ClassWithDefaultValue::class, $resolvedResource);
         $this->assertEquals('test', $resolvedResource->dependency);
     }
+
+    public function testItThrowsAnExceptionWhenItCannotResolveADependency()
+    {
+        $parameterName = sprintf('%s::dependency', ClassWithAScalarDependency::class);
+
+        $this->initialResolver->method('isResolvable')->with($parameterName)->willReturn(false);
+
+        $this->expectException(UnresolvableException::class);
+
+        $this->subject->resolve(ClassWithAScalarDependency::class);
+    }
 }
