@@ -111,7 +111,8 @@ class ChainedResolverTest extends TestCase
     {
         $reflection = new \ReflectionClass(ChainedResolver::class);
 
-        /** @var ChainedResolver $subject */
-        return $reflection->newInstanceArgs($resolvers);
+        /** @var ChainedResolver $resolver */
+        $resolver = $reflection->newInstanceArgs($resolvers);
+        return $resolver;
     }
 }
